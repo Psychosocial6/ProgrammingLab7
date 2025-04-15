@@ -219,7 +219,15 @@ public class DatabaseManager {
     public boolean deleteElementByKey(String login, String key) {
         boolean result = false;
         try {
+            boolean flag = false;
             connection.setAutoCommit(false);
+            PreparedStatement preparedStatementCheck = connection.prepareStatement("SELECT users.id FROM collection JOIN users ON collection.owner_id = users.id JOIN elements ON collection.element_id = elements.id JOIN coordinates ON elements.coordinates_id = coordinates.id WHERE collection.key = ? AND users.id = ?");
+            preparedStatementCheck.setString(1, key);
+            preparedStatementCheck.setInt(2, getOwnerID(login));
+            resultSet = preparedStatementCheck.executeQuery();
+            if (!resultSet.isBeforeFirst()) {
+                flag = true;
+            }
 
             PreparedStatement preparedStatementDelete = connection.prepareStatement("DELETE FROM coordinates WHERE id = (SELECT coordinates_id FROM elements WHERE id = (SELECT element_id FROM collection WHERE key = ? AND owner_id = ?))");
             preparedStatementDelete.setString(1, key);
@@ -228,6 +236,9 @@ public class DatabaseManager {
             preparedStatementDelete.execute();
             connection.commit();
             result = true;
+            if (flag) {
+                result = false;
+            }
         }
         catch (SQLException e) {
             try {
