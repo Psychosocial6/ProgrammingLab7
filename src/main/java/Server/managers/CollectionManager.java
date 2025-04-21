@@ -60,8 +60,8 @@ public class CollectionManager {
      * @param key - ключ
      * @param element - элемент
      */
-    public String insert(String key, Vehicle element) {
-        if (databaseManager.insertNewElement(key, element)) {
+    public String insert(String key, Vehicle element, String login) {
+        if (databaseManager.insertNewElement(key, element, login)) {
             collection = databaseManager.getCollection().getValue();
             return "Объект успешно вставлен в коллекцию";
         }
@@ -123,11 +123,11 @@ public class CollectionManager {
      * @param file - файл со скриптом
      * @param invoker - исполнитель команд
      */
-    public String executeScript(String file, Invoker invoker) {
+    public String executeScript(String file, Invoker invoker, String login) {
         String msg = "";
         ScriptExecutor executor = new ScriptExecutor(invoker);
         try {
-            msg = executor.executeScript(file);
+            msg = executor.executeScript(file, login);
         } catch (ScriptExecutionException e) {
             System.out.println(e.getMessage());
         }

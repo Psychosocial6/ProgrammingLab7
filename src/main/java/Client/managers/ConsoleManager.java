@@ -120,6 +120,7 @@ public class ConsoleManager {
                                 e.printStackTrace();
                             }
                             args[0] = data;
+                            args[1] = userName;
                         }
 
                         Request request = requestManager.getRequest(commandToken);
