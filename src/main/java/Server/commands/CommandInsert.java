@@ -26,7 +26,8 @@ public class CommandInsert extends Command {
     public String execute(Object[] args) { //key, elem
         String key = (String) args[0];
         Vehicle value = (Vehicle) args[1];
-        return collectionManager.insert(key, value);
+        String login = (String) args[2];
+        return collectionManager.insert(key, value, login);
     }
 
     /**

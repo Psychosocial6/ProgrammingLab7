@@ -106,9 +106,10 @@ public class DatabaseManager {
 
     }
 
-    public boolean insertNewElement(String key, Vehicle vehicle) {
+    public boolean insertNewElement(String key, Vehicle vehicle, String login) {
         boolean result = false;
         try {
+            vehicle.setOwnerID(getOwnerID(login));
             connection.setAutoCommit(false);
             PreparedStatement preparedStatementCoordinates = connection.prepareStatement("INSERT INTO coordinates (x, y) VALUES (?, ?)");
             preparedStatementCoordinates.setInt(1, vehicle.getCoordinates().getX());
