@@ -12,6 +12,7 @@ import Common.exceptions.WrongDataException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.time.ZonedDateTime;
+import java.util.HashSet;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -94,10 +95,10 @@ public class ScriptExecutor {
                             }
 
                             Long distanceTravelled = null;
-                            String distTr = scanner.nextLine();
-                            if (!distTr.isEmpty()) {
+                            line = scanner.nextLine();
+                            if (!line.isEmpty()) {
                                 try {
-                                    distanceTravelled = Long.parseLong(distTr);
+                                    distanceTravelled = Long.parseLong(line);
                                 } catch (InputMismatchException e) {
                                     throw new ScriptExecutionException("Wrong distanceTravelled");
                                 }
@@ -133,8 +134,10 @@ public class ScriptExecutor {
                         for (int i = 1; i < input.length; i++) {
                             args[i - 1] = input[i];
                         }
-                        args[args.length - 1] = login;
+
                     }
+                    args[args.length - 1] = login;
+
                     if (commandToken.equals("help")) {
                         args = new Object[16];
                         int index = 0;
@@ -145,7 +148,7 @@ public class ScriptExecutor {
 
                     }
                     try {
-                        msg += invoker.executeCommandUsingToken(commandToken, args);
+                        msg += invoker.executeCommandUsingToken(commandToken, args) + "\n";
                     } catch (ExecutionException e) {
                         return e.getMessage();
                     }

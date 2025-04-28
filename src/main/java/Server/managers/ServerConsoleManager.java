@@ -7,9 +7,11 @@ import java.util.Scanner;
 
 public class ServerConsoleManager {
     private Invoker invoker;
+    private DatabaseManager databaseManager;
 
-    public ServerConsoleManager(Invoker invoker) {
+    public ServerConsoleManager(Invoker invoker, DatabaseManager databaseManager) {
         this.invoker = invoker;
+        this.databaseManager = databaseManager;
     }
 
     public void readConsole() {
@@ -27,6 +29,9 @@ public class ServerConsoleManager {
                 switch (commandToken) {
                     case "exit":
                         System.exit(0);
+                        break;
+                    case "drop":
+                        databaseManager.dropDB();
                         break;
                 }
             }

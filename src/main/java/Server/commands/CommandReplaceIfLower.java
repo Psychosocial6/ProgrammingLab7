@@ -26,7 +26,8 @@ public class CommandReplaceIfLower extends Command {
     public String execute(Object[] args) {
         String key = (String) args[0];
         Vehicle element = (Vehicle) args[1];
-        return collectionManager.replaceIfLower(key, element);
+        String login = (String) args[2];
+        return collectionManager.replaceIfLower(key, element, login);
     }
 
     /**

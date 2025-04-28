@@ -2,14 +2,10 @@ package Server.managers;
 
 import Common.collectionElements.Vehicle;
 import Server.exceptions.ScriptExecutionException;
-import Server.utils.Invoker;
-import Server.utils.ScriptExecutor;
-import Server.utils.User;
+import Server.utils.*;
 
 import java.io.File;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -22,15 +18,12 @@ public class CollectionManager {
     private ConcurrentHashMap<String, Vehicle> collection;
     private final ZonedDateTime initializationDate;
     private DatabaseManager databaseManager;
-    //нужно периодически обновлять
-    private ConcurrentHashMap<Integer, User> users;
 
 
     public CollectionManager(DatabaseManager databaseManager) {
         initializationDate = ZonedDateTime.now();
         this.databaseManager = databaseManager;
-        collection = databaseManager.getCollection().getValue();
-        users = databaseManager.getCollection().getKey();
+        collection = databaseManager.getCollection();
     }
 
     /**
@@ -61,8 +54,9 @@ public class CollectionManager {
      * @param element - элемент
      */
     public String insert(String key, Vehicle element, String login) {
+        System.out.println(element.getCreationDate());
         if (databaseManager.insertNewElement(key, element, login)) {
-            collection = databaseManager.getCollection().getValue();
+            collection = databaseManager.getCollection();
             return "Объект успешно вставлен в коллекцию";
         }
         return "Ошибка";
@@ -73,15 +67,18 @@ public class CollectionManager {
      * @param id - id
      * @param element - элемент на который заменяется существующий
      */
-    public String updateById(int id, Vehicle element) {
-        if (databaseManager.updateElementByID(id, element)) {
-            for (String key : collection.keySet()) {
-                if (collection.get(key).getId() == id) {
-                    element.setId(collection.get(key).getId());
-                    element.setCreationDate(collection.get(key).getCreationDate());
-                    collection.put(key, element);
-                }
-            }
+    public String updateById(int id, Vehicle element, String login) {
+        if (databaseManager.updateElementByID(id, element, login)) {
+            collection.keySet()
+                    .stream()
+                    .filter(key -> collection.get(key).getId() == id)
+                    .forEach(key -> {
+                        Vehicle vehicle = collection.get(key);
+                        element.setId(vehicle.getId());
+                        element.setCreationDate(vehicle.getCreationDate());
+                        collection.put(key, element);
+                    });
+
             return String.format("Объект с id {%d} успешно обновлен", id);
         }
         return "Ошибка";
@@ -104,7 +101,7 @@ public class CollectionManager {
      */
     public String clear(String userName) {
         if (databaseManager.clearCollection(userName)) {
-            collection = databaseManager.getCollection().getValue();
+            collection = databaseManager.getCollection();
             return "Коллекция успешно очищена";
         }
         return "Ошибка!";
@@ -114,6 +111,7 @@ public class CollectionManager {
      * Метод для сохранения коллекции в файл
      * @param file - файл для сохранения
      */
+    @Deprecated
     public String save(File file) {
         return "";
     }
@@ -137,6 +135,7 @@ public class CollectionManager {
     /**
      * Метод для завершения работы программы
      */
+    @Deprecated
     public String exit() {
         System.exit(0);
         return "Работа завершена";
@@ -147,14 +146,16 @@ public class CollectionManager {
      * @param element - элемент с которым сравнивается
      */
     public String removeIfLower(Vehicle element, String login) {
-        String msg = "Ничего не было удалено";
-        for (String key : collection.keySet()) {
-            if (collection.get(key).compareTo(element) < 0) {
-                databaseManager.deleteElementByKey(key, login);
-                collection.remove(key);
-            }
-        }
-        return msg;
+        int cnt = collection.size();
+        collection.keySet()
+                .stream()
+                .filter(key -> collection.get(key).compareTo(element) < 0)
+                .forEach(key -> {
+                    databaseManager.deleteElementByKey(key, login);
+                    collection.remove(key);
+                });
+
+        return String.format("Было удалено %d элементов", cnt - collection.size());
     }
 
     /**
@@ -162,10 +163,10 @@ public class CollectionManager {
      * @param key - ключ
      * @param element - новое значение
      */
-    public String replaceIfLower(String key, Vehicle element) {
+    public String replaceIfLower(String key, Vehicle element, String login) {
         String msg = "Ничего не было заменено";
         if (collection.get(key).compareTo(element) < 0) {
-            databaseManager.updateByKey(key, element);
+            databaseManager.updateByKey(key, element, login);
             collection.put(key, element);
             msg = String.format("Объект с ключом {%s} был заменен", key);
         }
@@ -177,10 +178,10 @@ public class CollectionManager {
      * @param key - ключ
      * @param element - новое значение
      */
-    public String replaceIfGreater(String key, Vehicle element) {
+    public String replaceIfGreater(String key, Vehicle element, String login) {
         String msg = "Ничего не было заменено";
         if (collection.get(key).compareTo(element) > 0) {
-            databaseManager.updateByKey(key, element);
+            databaseManager.updateByKey(key, element, login);
             collection.put(key, element);
             msg = String.format("Объект с ключом {%s} был заменен", key);
         }
@@ -192,13 +193,12 @@ public class CollectionManager {
      * @param name - подстрока
      */
     public String filterContainsName(String name) {
-        String msg = String.format("Name contains %s:\n", name);
-        for (String key: collection.keySet()) {
-            if (collection.get(key).getName().contains(name)) {
-                msg += collection.get(key) + "\n";
-            }
-        }
-        return msg;
+        String result = collection.keySet()
+                .stream()
+                .filter(key -> collection.get(key).getName().contains(name))
+                .map(key -> collection.get(key).toString())
+                .collect(Collectors.joining("\n"));
+        return String.format("Name contains %s:\n%s", name, result);
     }
 
     /**
@@ -206,47 +206,44 @@ public class CollectionManager {
      * @param name - подстрока
      */
     public String filterStartsWithName(String name) {
-        String msg = String.format("Name starts with %s:\n", name);
-        for (String key: collection.keySet()) {
-            if (collection.get(key).getName().startsWith(name)) {
-                msg += collection.get(key) + "\n";
-            }
-        }
-        return msg;
+        String result = collection.keySet()
+                .stream()
+                .filter(key -> collection.get(key).getName().startsWith(name))
+                .map(key -> collection.get(key).toString())
+                .collect(Collectors.joining("\n"));
+        return String.format("Name starts with %s:\n%s", name, result);
     }
 
     /**
      * Метод для вывода полей distanceTravelled в порядке возрастания
      */
     public String printFieldAscendingDistanceTravelled() {
-        String msg = "";
-        ArrayList<Long> distances = new ArrayList<>();
-        for (String key : collection.keySet()) {
-            distances.add(collection.get(key).getDistanceTravelled());
-        }
-        Collections.sort(distances);
-        System.out.println("Field distanceTravelled:");
-        for (Long dist : distances) {
-            msg += dist + "\n";
-        }
-        return msg;
+        String sortedDistances = collection.values()
+                .stream()
+                .map(Vehicle::getDistanceTravelled)
+                .sorted()
+                .map(String::valueOf)
+                .collect(Collectors.joining("\n"));
+
+        return "Field distanceTravelled:\n" + sortedDistances;
     }
 
     public String register(String name, String password) {
         ConcurrentHashMap<Integer, User> users = databaseManager.getUsers();
-        for (Integer id : users.keySet()) {
-            if (users.get(id).getName().equals(name)) {
-                if (users.get(id).getPassword().equals(password)) {
-                    return String.format("Пользователь успешно заргеистрирован c id = %d", databaseManager.getOwnerID(name));
-                }
-                else {
-                    return "Неверный пароль";
-                }
-            }
-
-        }
-        databaseManager.insertUser(name, password);
-        return String.format("Новый пользователь %s зарегистрирован c id = %d", name, databaseManager.getOwnerID(name));
+        return users.values().stream()
+                .filter(user -> user.getName().equals(name))
+                .findFirst()
+                .map(user -> {
+                    if (user.getPassword().equals(PasswordHasher.hashPassword(password))) {
+                        return String.format("Пользователь успешно заргеистрирован c id = %d", databaseManager.getOwnerID(name));
+                    } else {
+                        return "Неверный пароль";
+                    }
+                })
+                .orElseGet(() -> {
+                    databaseManager.insertUser(name, PasswordHasher.hashPassword(password));
+                    return String.format("Новый пользователь %s зарегистрирован c id = %d", name, databaseManager.getOwnerID(name));
+                });
     }
 
     /**

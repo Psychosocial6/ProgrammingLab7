@@ -73,11 +73,12 @@ public class UDPServer {
     }
 
     private void processRequest(Request request, SocketAddress socketAddress) {
+
         if (request.requiresVehicle()) {
             Object[] args = request.getArgs();
             Vehicle vehicle = (Vehicle) args[args.length - 2];
             vehicle.setCreationDate(ZonedDateTime.now());
-            args[args.length - 1] = vehicle;
+            args[args.length - 2] = vehicle;
             request.setArgs(args);
         }
         String result;
@@ -105,6 +106,4 @@ public class UDPServer {
             System.out.println("error while sending");
         }
     }
-
-
 }

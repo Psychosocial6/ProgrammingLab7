@@ -27,7 +27,6 @@ public class Invoker {
         commands.put("update", new CommandUpdate(collectionManager));
         commands.put("remove_key", new CommandRemoveKey(collectionManager));
         commands.put("clear", new CommandClear(collectionManager));
-        commands.put("save", new CommandSave(collectionManager));
         commands.put("remove_lower", new CommandRemoveLower(collectionManager));
         commands.put("replace_if_greater", new CommandReplaceIfGreater(collectionManager));
         commands.put("replace_if_lower", new CommandReplaceIfLower(collectionManager));

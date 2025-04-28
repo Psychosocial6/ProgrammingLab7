@@ -13,7 +13,7 @@ public class Server {
         CollectionManager collectionManager = new CollectionManager(databaseManager);
         Invoker invoker = new Invoker(collectionManager);
         UDPServer udpServer = new UDPServer(2222, 65507, invoker);
-        ServerConsoleManager consoleManager = new ServerConsoleManager(invoker);
+        ServerConsoleManager consoleManager = new ServerConsoleManager(invoker, databaseManager);
         ConsoleThread consoleThread = new ConsoleThread(consoleManager);
         consoleThread.start();
         udpServer.startServer();

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS elements (
 	id SERIAL PRIMARY KEY,
 	name TEXT NOT NULL,
 	coordinates_id INTEGER NOT NULL,
-	creation_date DATE NOT NULL,
+	creation_date TIMESTAMP WITH TIME ZONE NOT NULL,
 	engine_power BIGINT,
 	capacity DOUBLE PRECISION,
 	distance_travelled BIGINT,

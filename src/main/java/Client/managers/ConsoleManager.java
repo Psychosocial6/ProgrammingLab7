@@ -1,7 +1,6 @@
 package Client.managers;
 
 import Client.Client;
-import Client.utils.PasswordHasher;
 import Common.requests.Request;
 import Client.utils.FileReader;
 import Client.utils.VehicleReader;
@@ -53,7 +52,6 @@ public class ConsoleManager {
                         for (int i = 0; i < args.length; i++) {
                             args[i] = input[i];
                         }
-                        args[1] = PasswordHasher.hashPassword((String) args[1]);
                         userName = (String) args[0];
                         password = (String) args[1];
                         request.setArgs(args);

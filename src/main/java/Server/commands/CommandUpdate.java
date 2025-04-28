@@ -26,7 +26,8 @@ public class CommandUpdate extends Command {
     public String execute(Object[] args) {
         int id = Integer.parseInt((String)args[0]);
         Vehicle element = (Vehicle) args[1];
-        return collectionManager.updateById(id, element);
+        String login = (String) args[2];
+        return collectionManager.updateById(id, element, login);
     }
 
     /**
